@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, send_from_directory
 import requests
 from datetime import datetime, timezone, timedelta
 
-app = Flask(__name__, static_folder='GEO/front')
+app = Flask(__name__)
 
 coord = {
     "hhs": (24.15, 121.27),
