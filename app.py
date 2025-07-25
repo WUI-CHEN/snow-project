@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, send_from_directory
 import requests
 from datetime import datetime, timezone, timedelta
 
-app = Flask(__name__, static_folder='templates')
+app = Flask(__name__)
 
 coord = {
     "hhs": (24.15, 121.27),
@@ -218,5 +218,5 @@ def result():
                            traffic_light = traffic_light)
                            
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5006)
