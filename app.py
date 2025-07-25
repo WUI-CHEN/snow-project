@@ -2,6 +2,8 @@ from flask import Flask, request, render_template, send_from_directory, jsonify
 import requests
 import os
 from datetime import datetime, timezone, timedelta
+from urllib.parse import urlencode
+import json
 
 app = Flask(__name__)
 
@@ -224,6 +226,9 @@ def geocode():
     except:
         return jsonify({"error": "地理編碼錯誤"}), 500
 
+import json
+from urllib.parse import urlencode
+
 @app.route("/api/route", methods=["POST"])
 def route():
     body = request.get_json()
@@ -265,14 +270,24 @@ def route():
             ]
         }
 
+    # ⚠️ 這裡做格式轉換
+    params = {}
+    for key, value in payload.items():
+        if isinstance(value, dict):
+            params[key] = json.dumps(value)
+        else:
+            params[key] = value
+
     try:
         response = requests.post(
             "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World/solve",
-            data=payload
+            data=urlencode(params),
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
         return jsonify(response.json())
-    except:
-        return jsonify({"error": "路線查詢失敗"}), 500
+    except Exception as e:
+        return jsonify({"error": f"路線查詢失敗：{str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5006)
