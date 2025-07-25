@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, jsonify, request, render_template, send_from_directory
 import requests
 from datetime import datetime, timezone, timedelta
 from flask_cors import CORS
