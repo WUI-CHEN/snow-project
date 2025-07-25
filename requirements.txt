@@ -46,3 +46,4 @@ typing-inspection==0.4.1
 typing_extensions==4.14.1
 urllib3==2.5.0
 zstandard==0.23.0
+Flask==3.1.1
