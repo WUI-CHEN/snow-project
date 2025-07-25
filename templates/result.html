@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>風險查詢結果</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="icon" href="{{ url_for('static', filename='images/ncdr.png') }}" type="image/png">
+		<noscript><link rel="stylesheet" href="/static/css/noscript.css" /></noscript>
+
+    <style>
+      .result-info {
+        color: #5e5a5a;
+        font-size: 1.25rem;
+        line-height: 1.8;
+        font-family: "Noto Sans TC", sans-serif;
+        background-color: #f9f9f9;
+        padding: 1em 1.5em 1em 1.5em;
+        border-radius: 12px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      }
+      .result-info h2 {
+        color: #030303;
+        font-size: 1.6rem;
+        margin-top: 0;
+      }
+      .result-info b {
+        color: #cc0000;
+        font-size: 1.3rem;
+      }
+
+        /* 讓 section wrapper 上下左右變窄 */
+      #main.wrapper {
+        margin: 0;        /* 去掉外距 */
+        padding: 0.5em;   /* 內距變小 */
+      }
+
+      /* 內層容器也縮小padding */
+      #main.wrapper .inner {
+        padding: 0.5em;
+        margin: 0;
+      }
+
+      /* 也可以視情況調整表單間距 */
+      .form-row {
+        margin: 0;
+        padding: 0;
+      }
+
+      #main.wrapper {
+        margin-top: 0.5em;  /* 原本可能較大，改小一點 */
+        margin-bottom: 0.5em;
+        padding-top: 0em; /* 也可調整成更小 */
+        padding-bottom: 0.5em;
+      }
+
+      #main.wrapper .inner {
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+
+      
+    </style>
+    
+	</head>
+
+	<!-- Header -->
+	<header id="header">
+		<a href="{{ url_for('index') }}" class="title">冬季災害風險警示</a>
+		<nav>
+			<ul>
+				<li><a href="{{ url_for('index') }}">Home</a></li>
+				<li><a href="{{ url_for('generic') }}">Inquiry</a></li>
+				<li><a href="{{ url_for('result') }}" class="active">Result</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<!-- Wrapper -->
+	<div id="wrapper">
+
+		<!-- Main -->
+		<section id="main" class="wrapper">
+
+			<div class="inner">
+				<h1 class="major">風險查詢結果</h1>
+				
+				<!-- 查詢結果區域 -->
+				<div class="result-container" style="display: flex; justify-content: space-between; gap: 5px;">
+
+          <!-- 左側圖片區域 -->
+          <div class="result-image" style="flex: 4.0; padding-right: 10px">
+            <iframe src="{{ map_url }}" width="100%" height="600" style="border:none;"></iframe>
+          </div>
+        
+          <!-- 右側查詢結果區域 -->
+          <div class="result-info" style="flex: 1.25; height: auto">
+            <h2 style="margin-top: 0;">
+              {{ location_name }} <br> 在 {{ date_display }} 的天氣查詢結果
+            </h2>
+
+            🌡 溫度：{{ temperature }} °C<br>
+            💧 濕度：{{ humidity }} %<br>
+            📈 降雨機率：{{ rain_prob }} %<br>
+            🌫 能見度：{{ visibility }} M<br>
+            💦 露點溫度：{{ dew_point  }} °C<br>
+            ☃️ 降雪量：{{ snowfall }} mm<br><br>
+            
+        
+            {% if location_type == "mountain" %}
+              {% if risks %}
+               <b>風險提示：</b><br>
+                {% for risk in risks %}
+                  - {{ risk }}<br>
+                {% endfor %}
+              {% else %}
+                無明顯風險，請注意安全登山
+              {% endif %}
+            {% elif location_type == "road" %}
+              <b>風險提示：</b><br>
+              {% if overall_risk == "高風險" %}
+                已達路面結冰標準，建議避開此路線
+              {% elif overall_risk == "中風險" %}
+                有道路結冰風險，建議攜帶雪鍊上山
+              {% else %}
+                路面結冰風險較低，請依現場路況小心行駛
+              {% endif %}
+              <br><br>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <b>結冰風險評估：</b> 
+
+              {% if traffic_light == "red" %}
+                <div style="width: 30px; height: 30px; border-radius: 50%; background-color: red;"></div>
+              {% elif traffic_light == "orange" %}
+                <div style="width: 30px; height: 30px; border-radius: 50%; background-color: orange;"></div>
+              {% elif traffic_light == "green" %}
+                <div style="width: 30px; height: 30px; border-radius: 50%; background-color: rgb(7, 251, 7);"></div>
+              {% endif %}
+            {% endif %}
+            </div>
+          
+          </div>
+        </div>
+        
+			</div>
+		</section>
+
+	</div>
+
+	<!-- Footer -->
+	<footer id="footer" class="wrapper alt">
+		<div class="inner">
+			<ul class="menu">
+				<li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				<li>
+					Licensed under 
+					<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">
+						Creative Commons Attribution 3.0 Unported License
+					</a>
+				</li>
+			</ul>
+		</div>
+	</footer>
+
+	<!-- Scripts -->
+	<script src="/static/js/jquery.min.js"></script>
+	<script src="/static/js/jquery.scrollex.min.js"></script>
+	<script src="/static/js/jquery.scrolly.min.js"></script>
+	<script src="/static/js/browser.min.js"></script>
+	<script src="/static/js/breakpoints.min.js"></script>
+	<script src="/static/js/util.js"></script>
+	<script src="/static/js/main.js"></script>
+
+	<script>
+		// 如果有日期選擇，從 URL 獲取並顯示風險等級
+		const urlParams = new URLSearchParams(window.location.search);
+		const selectedDate = urlParams.get('date'); // 從URL獲取選擇的日期
+		console.log("選擇的日期是：" + selectedDate);
+
+		// 模擬風險分析結果
+		// 假設根據日期進行風險計算後，會設定不同的風險等級
+		const riskLevel = "高風險";  // 根據 API 或計算結果來設置
+		document.getElementById('risk-level').innerHTML = "風險等級：" + "<span class='high-risk'>" + riskLevel + "</span>";
+	</script>
+</body>
+</html>

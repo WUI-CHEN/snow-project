@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<!--
+	Hyperspace by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>冬季災害風險查詢</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" /> <!--手機和平板的「響應式設計」-->
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+		<link rel="icon" href="{{ url_for('static', filename='images/ncdr.png') }}" type="image/png">
+		<noscript><link rel="stylesheet" href="/static/css/noscript.css" /></noscript>
+
+		<style>
+			/* 控制每個藍色區塊（內層 section）的高度 */
+			.wrapper.style2.spotlights > section {
+			padding: 0em 0 !important;    /* 調小上下內距，讓藍色區塊變矮 */
+			min-height: unset !important; /* 有些主題會設 fullscreen 高度，這裡取消它 */
+			height: auto !important;
+			}
+
+			/* 如果內文 padding 也太寬，可以同步縮小 */
+			.wrapper.style2.spotlights .content .inner {
+			padding: 0em !important;
+			}
+
+			/* 調整標題字體大小 */
+			.wrapper.style2.spotlights .content .inner h2 {
+			font-size: 2em;  /* 原本可能是 2em 或更大，可依需求調整 */
+			}
+
+			/* 調整內文字體大小 */
+			.wrapper.style2.spotlights .content .inner p {
+			font-size: 1.1em;    /* 通常是 1em（=16px），你可以改成 0.9em、1.2em 等 */
+			line-height: 1em; /* 可選，讓行距更舒適 */
+			}
+
+		</style>
+
+	</head>
+	<body class="is-preload">   <!--class="is-preload" 是一種設定，代表畫面還沒完全載入前用這個樣式-->
+
+		<!-- Sidebar -->
+			<section id="sidebar">  <!--左邊的選單區域-->
+				<div class="inner">
+					<nav>
+						<ul>  <!--有一張清單 <ul>-->
+							<li><a href="#intro">首頁
+							</a></li>  <!--以及四個項目 <li>-->
+							<li><a href="#one">查詢</a></li>
+							<!--<li><a href="#two">What we do</a></li>-->
+							<!--<li><a href="#three">Get in touch</a></li>-->
+						</ul>
+					</nav>
+				</div>
+			</section>
+
+		<!-- 主內容區：Wrapper 包裹所有內容-->
+			<div id="wrapper">
+
+				<!-- Intro -->
+					<section id="intro" class="wrapper style1 fullscreen fade-up">
+						<div class="inner">
+							<h1>冬季災害風險警示</h1>
+							<p>你曾經想在冬季上山旅遊，卻擔心路面結冰、道路封閉打亂行程嗎?「寒徑有路」是專為冬季旅遊設計的風險預警平台，提供三大功能：認識常見冬季災害、透過氣象資料預測結冰風險，以及規劃避開高風險路段的替代路線。幫助你在從事高山旅遊的同時，也兼顧行車安全，讓冬季出遊更安心。
+								<br> <br> - NCDR 2025 災防資訊組 暑期實習
+								
+							</p>
+							<ul class="actions">
+								<li><a href="#one" class="button scrolly">Learn more</a></li>  <!--按鈕，點一下會滑到下一段-->
+							</ul>
+						</div>
+					</section>
+
+				<!-- 區塊二：One - 介紹三張圖片＋文字內容 -->
+					<section id="one" class="wrapper style2 spotlights">
+						<section>
+							<div class="image"><img src="{{ url_for('static', filename='images/pic01.jpg') }}" alt="" data-position="center center" /></div>  <!--<a href="#">：這是一個連結，但因為 # 沒有設定跳轉的目標，所以點了不會真的跳-->
+							<div class="content">
+								<div class="inner">
+									<h2>冬季常見的災害</h2>
+									<p>從冰封道路到斷水停航，走入一場被低溫支配的真實危機</p>
+									<ul class="actions">
+										<li><a href="{{ url_for('story') }}" class="button">Learn more</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+						<section>
+							<div class="image"><img src="{{ url_for('static', filename='images/pic02.jpg') }}" alt="" data-position="top center" /></div>
+							<div class="content">
+								<div class="inner">
+									<h2>道路及賞雪區域風險查詢</h2>
+									<p>一場雪景可能藏著風險，在出發前看清每一段旅程</p>
+									<ul class="actions">
+										<li><a href="{{ url_for('generic') }}" class="button">Learn more</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+						<section>
+							<div class="image"><img src="{{ url_for('static', filename='images/pic03.jpg') }}" alt="" data-position="25% 25%" /></div>
+							<div class="content">
+								<div class="inner">
+									<h2>道路封閉建議路線查詢</h2>
+									<p>避開封路死角，選出一條不被冰困的路</p>
+									<ul class="actions">
+										<li><a href="http://localhost:8080/index.html" class="button">Learn more</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+					</section>
+
+
+		<!-- Footer 提醒這裡是頁尾，不會顯示在網頁上 -->
+			<footer id="footer" class="wrapper style1-alt">   <!--<footer>：這個標籤是 HTML 裡專門用來放「頁尾內容」的-->
+				<div class="inner">   <!--這是一個小盒子，讓裡面的文字和東西不會貼著邊邊-->
+					<ul class="menu">
+						<li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+						<li>
+							Licensed under 
+							<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">
+							  Creative Commons Attribution 3.0 Unported License 
+							</a>
+						</li>
+						<br><br>
+						<span> 고려대학교 吳怡臻  &nbsp;  &nbsp; 國立東華大學 柯昕辰</span>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+			<script src="/static/js/jquery.min.js"></script>
+			<script src="/static/js/jquery.scrollex.min.js"></script>
+			<script src="/static/js/jquery.scrolly.min.js"></script>
+			<script src="/static/js/browser.min.js"></script>
+			<script src="/static/js/breakpoints.min.js"></script>
+			<script src="/static/js/util.js"></script>
+			<script src="/static/js/main.js"></script>
+
+	</body>
+</html>

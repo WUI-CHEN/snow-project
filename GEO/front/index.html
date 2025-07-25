@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>道路封閉建議路線查詢</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="/static/css/main.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <link rel="icon" href="/static/images/ncdr.png" type="image/png">
+
+  <style>
+    /* 設定#controls區域的字體顏色和背景色 */
+    #controls {
+      padding: 20px;
+      background: #f0f0f0;
+      color: black; /* 這裡設定字體顏色為黑色 */
+    }
+
+    #controls input {
+      padding: 5px;
+      margin: 5px;
+      width: 300px;
+      color: black; /* 按鈕的字體顏色設定為黑色 */
+      border: 1px solid black; /* 按鈕邊框設為黑色 */
+      background-color: white; /* 按鈕背景色設為白色 */
+    }
+
+    #controls button {
+      padding: 0px 0px 8px 1px; 
+      margin: 1px 10px;  
+      width: 100px;
+      height: 60px;
+      color: black; /* 按鈕的字體顏色設定為黑色 */
+      border: 1px solid black; /* 按鈕邊框設為黑色 */
+      background-color: black; /* 按鈕背景色設為白色 */
+      font-size: 15px; /* 設置字體大小為 18px，調整為你想要的大小 */
+      font-weight: bold; /* 如果需要讓字體加粗，可以加這一行 */
+    }
+
+    #controls button:hover {
+          background-color: #5a5b5d;
+          color: rgb(1, 1, 1);
+    }
+
+    /* 設定導航頁面頭部字體顏色 */
+    #header a {
+      color: black; /* 使導航字體顏色變為黑色 */
+    }
+
+    /* 其他頁面樣式 */
+    #map { height: 80vh; }
+
+    #info { 
+      padding: 10px; 
+      background: #fff8dc; 
+      color: black;  
+    }
+
+    #info b {
+      color: black;
+    }
+
+    #controls input::placeholder {
+      color: rgb(200, 200, 200) !important; /* 設置 placeholder 文字為灰色 */
+    }
+
+    section.wrapper {
+      padding-top: 0rem;  /* 原本可能是 4rem */
+    }
+
+          /* 可選：進一步讓內文更靠近上方 */
+    .inner {
+      padding-top: 1rem;
+    }
+
+    h1.major {
+      margin-bottom: 3rem; /* 標題與 iframe 的距離 */
+    }
+
+    #main.wrapper {
+        margin: 0;       /* 外距全清空 */
+        padding: 0.5em;  /* 內距調小，視需求調整 */
+    }
+
+    #main.wrapper .inner {
+        padding: 0.5em;  /* 內距調小 */
+        margin: 0;
+    }
+
+  </style>
+</head>
+
+<body class="is-preload">
+  <!-- Header -->
+  <header id="header">
+    <a href="http://127.0.0.1:5000/" class="title">冬季災害風險警示</a>
+    <nav>
+      <ul>
+        <li><a href="http://127.0.0.1:5000/">Home</a></li>
+        <li><a href="index.html" class="active">Map Inquiry</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Wrapper -->
+  <div id="wrapper">
+    <!-- Main -->
+    <section id="main" class="wrapper">
+      <div class="inner">
+        <h1 class="major">避災建議路線查詢</h1>
+
+        <div id="controls">    
+          出發地：<input id="start" placeholder="如：花蓮火車站">   
+          目的地：<input id="end" placeholder="如：太魯閣國家公園">
+          <button onclick="findRoute()">查詢</button>
+        </div>
+        <div id="info"></div>
+        <div id="map"></div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer id="footer" class="wrapper alt">
+    <div class="inner">
+      <ul class="menu">
+        <li>&copy; Untitled. All rights reserved.</li>
+        <li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+        <li>
+          Licensed under 
+          <a href="http://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">
+            Creative Commons Attribution 3.0 Unported License
+          </a>
+        </li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([24.1, 121.3], 9);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const disasterPolygons = [
+      [[24.182159, 121.302797], [24.112141, 121.198599], [24.083572, 121.221763], [24.153851, 121.326465]],
+      [[24.187964, 120.897807], [24.146699, 120.908670], [24.179253, 121.033698],[24.220227, 121.022100]],
+      [[24.688546, 121.390950], [24.651461, 121.451374],[24.630567, 121.434247], [24.668334, 121.373576]]
+    ];
+    disasterPolygons.forEach(p => {
+      L.polygon(p, { color: 'red', fillOpacity: 0.3 }).addTo(map).bindPopup("災區"); 
+    });
+
+    let routeAvoidLayer, routeNormalLayer;
+
+    async function geocode(address) {
+      const res = await fetch("http://localhost:8080/api/geocode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address })
+      });
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("地理編碼回傳錯誤（不是 JSON）：\n" + text.substring(0, 200));
+      }
+      if (!data.location) {
+        throw new Error("⚠️ 找不到地點，請確認地址正確！");
+      }
+      return data.location;
+    }
+
+
+
+    async function findRoute() {
+      const start = document.getElementById("start").value.trim();
+      const end = document.getElementById("end").value.trim();
+      if (!start || !end) return alert("請輸入起點與終點");
+
+      if (routeAvoidLayer) map.removeLayer(routeAvoidLayer);
+      if (routeNormalLayer) map.removeLayer(routeNormalLayer);
+
+      try {
+        const [startLoc, endLoc] = await Promise.all([geocode(start), geocode(end)]);
+
+        const [avoidRes, normalRes] = await Promise.all([
+          fetch("http://localhost:8080/api/route", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              stops: [startLoc, endLoc],
+              barriers: disasterPolygons.map(poly => poly.map(([lat, lng]) => [lng, lat]))
+            })
+          }),
+          fetch("http://localhost:8080/api/route", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stops: [startLoc, endLoc] })
+          })
+        ]);
+
+        const avoidText = await avoidRes.text();
+        let avoidData = JSON.parse(avoidText);
+
+        const normalText = await normalRes.text();
+        let normalData = JSON.parse(normalText);
+
+        if (!avoidData.routes.features.length) {
+          alert("避災路線查無結果");
+          return;
+        }
+        const avoidPath = avoidData.routes.features[0].geometry.paths[0].map(p => [p[1], p[0]]);
+
+        if (!normalData.routes.features.length) {
+          alert("最短路線查無結果");
+          return;
+        }
+        const normalPath = normalData.routes.features[0].geometry.paths[0].map(p => [p[1], p[0]]);
+
+        routeAvoidLayer = L.polyline(avoidPath, { color: "blue", weight: 5 }).addTo(map).bindPopup("避開災區");
+        routeNormalLayer = L.polyline(normalPath, { color: "red", dashArray: "5,5" }).addTo(map).bindPopup("最短路線");
+
+        map.fitBounds(routeAvoidLayer.getBounds());
+
+        const a = avoidData.routes.features[0].attributes;
+        const n = normalData.routes.features[0].attributes;
+
+        let extraInfo = `
+          🔵 <b>避災路線</b>：${a.Total_Kilometers.toFixed(1)} km / ${a.Total_TravelTime.toFixed(1)} 分<br>
+          🔴 <b>最短路線</b>：${n.Total_Kilometers.toFixed(1)} km / ${n.Total_TravelTime.toFixed(1)} 分<br>
+          ➕ 多出：${(a.Total_Kilometers - n.Total_Kilometers).toFixed(1)} km / ${(a.Total_TravelTime - n.Total_TravelTime).toFixed(1)} 分
+        `;
+
+        // 加入判斷，若最短路線比避災路線長，顯示警告訊息
+        if (n.Total_Kilometers > a.Total_Kilometers) {
+          extraInfo += `
+            <br><b>⚠️警告：</b>出發地或目的地可能位於結冰高風險區域，請依路況調整路線，小心駕駛。
+          `;
+        }
+
+        document.getElementById("info").innerHTML = extraInfo;
+
+      } catch (err) {
+        alert("查詢錯誤：" + err.message);
+      }
+    }
+
+  </script>
+</body>
+</html>
