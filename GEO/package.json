@@ -3,11 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-
-
   "scripts": {
-    "start": "concurrently \"python SNOW/app.py\" \"node SNOW/GEO/back/server.js\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "concurrently \"python ../app.py\" \"node back/server.js\""
   },
   
   "keywords": [],
@@ -23,4 +20,3 @@
     "concurrently": "^7.6.0"
   }
 }
-
