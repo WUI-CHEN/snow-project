@@ -1,10 +1,9 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory, jsonify
 import requests
+import os
 from datetime import datetime, timezone, timedelta
 
-
 app = Flask(__name__)
-
 
 coord = {
     "hhs": (24.15, 121.27),
@@ -45,14 +44,12 @@ map_links = {
     "t7j": "https://archive.maps.arcgis.com/apps/instant/interactivelegend/index.html?appid=be188814208b4c3785e090de2e066a53"
 }
 
-# 根據選擇的地點來分類風險
 def get_location_type(loc_code):
-    # 如果是台14甲線，則視為道路
-    if loc_code in ["t14j", "t8", "t7","nz"]:
+    if loc_code in ["t14j", "t8", "t7", "nz"]:
         return "road"
     else:
         return "mountain"
-    
+
 def get_weather_and_risks(loc_code, date):
     if loc_code not in coord:
         return None, "查無地點", None
@@ -81,7 +78,6 @@ def get_weather_and_risks(loc_code, date):
 
     time_objs = [datetime.fromisoformat(t).replace(tzinfo=timezone(timedelta(hours=8))) for t in time_list]
 
-    # 把現在時間取整點（15:09 -> 15:00、16:58 -> 17:00）
     now = datetime.now(timezone(timedelta(hours=8)))
     rounded_hour = now.replace(minute=0, second=0, microsecond=0)
     if now.minute >= 30:
@@ -107,47 +103,34 @@ def get_weather_and_risks(loc_code, date):
     visibility = weather["hourly"]["visibility"][index]
     dew_point = weather["hourly"]["dew_point_2m"][index]
 
-
     risks = []
     location_type = get_location_type(loc_code)
 
     if location_type == "mountain":
         if temperature < 0:
             risks.append("水管凍結風險")
-
-        if visibility < 200:  #Visibility
+        if visibility < 200:
             risks.append("濃霧風險")
-
         if rain_prob > 70:
             risks.append("降雨機率偏高，建議備雨具或延後行程")
-
         if snowfall > 0:
             risks.append(f"預計降雪量為 {snowfall} mm/hr，請注意道路結冰或封閉情況")
-
-        traffic_light = "gray"     ### 山區沒燈號也定義一個值，否則return時會出錯
-    
-    else:
+        traffic_light = "gray"
         overall_risk = None
-
-        if temperature < 0 and (dew_point < 0 or humidity >= 70 ):
+    else:
+        if temperature < 0 and (dew_point < 0 or humidity >= 70):
             overall_risk = "高風險"
-
-        elif temperature > 5 or dew_point > 0 or humidity < 70 :
+        elif temperature > 5 or dew_point > 0 or humidity < 70:
             overall_risk = "低風險"
-
         else:
             overall_risk = "中風險"
 
         risks.append(overall_risk)
-
-        # 根據 overall_risk 決定燈號顏色
-        if overall_risk == "高風險":
-            traffic_light = "red"
-        elif overall_risk == "中風險":
-            traffic_light = "orange"
-        else:
-            traffic_light = "green"
-
+        traffic_light = {
+            "高風險": "red",
+            "中風險": "orange",
+            "低風險": "green"
+        }.get(overall_risk, "gray")
 
     return {
         "temperature": temperature,
@@ -160,9 +143,8 @@ def get_weather_and_risks(loc_code, date):
         "risks": risks,
         "overall_risk": overall_risk if location_type == "road" else None,
         "location_type": location_type,
-        "traffic_light" : traffic_light
+        "traffic_light": traffic_light
     }, None, weather
-
 
 @app.route('/')
 def index():
@@ -180,7 +162,7 @@ def generic():
 def map_inquiry():
     return send_from_directory('GEO/front', 'index.html')
 
-@app.route("/result")
+@app.route('/result')
 def result():
     loc_code = request.args.get("location")
     date = request.args.get("date")
@@ -192,7 +174,6 @@ def result():
 
     weather_data, error, _ = get_weather_and_risks(loc_code, formatted_date)
 
-
     if error:
         return error, 500
 
@@ -201,24 +182,98 @@ def result():
     map_url = map_links.get(loc_code, "")
     date_display = datetime.strptime(date, "%Y/%m/%d").strftime("%m/%d")
 
-
     return render_template("result.html",
-                           location = loc_code,
-                           location_name = loc_names.get(loc_code, loc_code),
-                           temperature = weather_data["temperature"],
-                           humidity = weather_data["humidity"],
-                           rain_prob = weather_data["rain_prob"],
-                           rain = weather_data["rain"],
-                           snowfall = weather_data["snowfall"],
-                           visibility = weather_data["visibility"],
-                           dew_point = weather_data["dew_point"],
-                           risks = weather_data["risks"],
-                           overall_risk = weather_data["overall_risk"],
-                           map_url = map_url,
-                           date_display = date_display,
-                           location_type = location_type,
-                           traffic_light = traffic_light)
-                           
+        location=loc_code,
+        location_name=loc_names.get(loc_code, loc_code),
+        temperature=weather_data["temperature"],
+        humidity=weather_data["humidity"],
+        rain_prob=weather_data["rain_prob"],
+        rain=weather_data["rain"],
+        snowfall=weather_data["snowfall"],
+        visibility=weather_data["visibility"],
+        dew_point=weather_data["dew_point"],
+        risks=weather_data["risks"],
+        overall_risk=weather_data["overall_risk"],
+        map_url=map_url,
+        date_display=date_display,
+        location_type=location_type,
+        traffic_light=traffic_light
+    )
+
+@app.route("/api/geocode", methods=["POST"])
+def geocode():
+    data = request.get_json()
+    address = data.get("address")
+    if not address:
+        return jsonify({"error": "請輸入地址"}), 400
+
+    url = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
+    params = {
+        "f": "json",
+        "singleLine": address,
+        "maxLocations": 1,
+        "token": os.getenv("ESRI_API_KEY")
+    }
+
+    try:
+        res = requests.get(url, params=params)
+        res_data = res.json()
+        if not res_data.get("candidates"):
+            return jsonify({"error": "找不到地點"}), 404
+        return jsonify({"location": res_data["candidates"][0]["location"]})
+    except:
+        return jsonify({"error": "地理編碼錯誤"}), 500
+
+@app.route("/api/route", methods=["POST"])
+def route():
+    body = request.get_json()
+    stops = body.get("stops")
+    barriers = body.get("barriers")
+
+    if not stops or len(stops) != 2:
+        return jsonify({"error": "請傳入兩個地點"}), 400
+
+    payload = {
+        "stops": {
+            "features": [
+                {
+                    "geometry": {
+                        "x": p["x"],
+                        "y": p["y"],
+                        "spatialReference": {"wkid": 4326}
+                    },
+                    "attributes": {"Name": f"P{i}"}
+                } for i, p in enumerate(stops)
+            ],
+            "spatialReference": {"wkid": 4326}
+        },
+        "returnRoutes": True,
+        "f": "json",
+        "token": os.getenv("ESRI_API_KEY")
+    }
+
+    if barriers:
+        payload["polygonBarriers"] = {
+            "features": [
+                {
+                    "geometry": {
+                        "rings": [poly],
+                        "spatialReference": {"wkid": 4326}
+                    },
+                    "attributes": {"Name": f"B{i}"}
+                } for i, poly in enumerate(barriers)
+            ]
+        }
+
+    try:
+        response = requests.post(
+            "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World/solve",
+            data=payload
+        )
+        return jsonify(response.json())
+    except:
+        return jsonify({"error": "路線查詢失敗"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5006)
+
