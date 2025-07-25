@@ -154,7 +154,7 @@
     let routeAvoidLayer, routeNormalLayer;
 
     async function geocode(address) {
-      const res = await fetch("http://localhost:8080/api/geocode", {
+      const res = await fetch("/api/geocode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address })
@@ -186,7 +186,7 @@
         const [startLoc, endLoc] = await Promise.all([geocode(start), geocode(end)]);
 
         const [avoidRes, normalRes] = await Promise.all([
-          fetch("http://localhost:8080/api/route", {
+          fetch("api/route", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -194,7 +194,7 @@
               barriers: disasterPolygons.map(poly => poly.map(([lat, lng]) => [lng, lat]))
             })
           }),
-          fetch("http://localhost:8080/api/route", {
+          fetch("api/route", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ stops: [startLoc, endLoc] })
