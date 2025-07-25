@@ -268,7 +268,7 @@ def route():
     try:
         response = requests.post(
             "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World/solve",
-            json=payload
+            data=payload
         )
         return jsonify(response.json())
     except:
