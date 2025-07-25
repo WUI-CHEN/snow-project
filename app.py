@@ -1,10 +1,9 @@
-from flask import Flask, jsonify, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory
 import requests
 from datetime import datetime, timezone, timedelta
-from flask_cors import CORS
+
 
 app = Flask(__name__)
-CORS(app)  # 開放 CORS 支援
 
 
 coord = {
@@ -220,14 +219,6 @@ def result():
                            location_type = location_type,
                            traffic_light = traffic_light)
                            
-
-@app.route('/api/geocode', methods=['POST'])
-def geocode():
-    data = request.get_json()
-    address = data.get('address')
-    # 這裡你可以進行處理，返回相應的結果
-    return jsonify({"address": address, "geocode": "some result"})
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5006)
