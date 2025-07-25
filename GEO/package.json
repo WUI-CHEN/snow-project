@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+
+
   "scripts": {
-    "start": "concurrently \"python app.py\" \"node SNOW/GEO/back/server.js\"",
+    "start": "concurrently \"python SNOW/app.py\" \"node SNOW/GEO/back/server.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -17,7 +20,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "concurrently": "^7.0.0"
+    "concurrently": "^7.6.0"
   }
 }
 
