@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/static/css/main.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <link rel="icon" href="/static/images/ncdr.png" type="image/png">
- 
+
   <style>
     /* 設定#controls區域的字體顏色和背景色 */
     #controls {
@@ -154,7 +154,7 @@
     let routeAvoidLayer, routeNormalLayer;
 
     async function geocode(address) {
-      const res = await fetch("https://snow-api-wg16.onrender.com/api/geocode", {
+      const res = await fetch("http://localhost:8080/api/geocode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address })
@@ -186,7 +186,7 @@
         const [startLoc, endLoc] = await Promise.all([geocode(start), geocode(end)]);
 
         const [avoidRes, normalRes] = await Promise.all([
-          fetch("https://snow-api-wg16.onrender.com/api/route", {
+          fetch("http://localhost:8080/api/route", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -194,7 +194,7 @@
               barriers: disasterPolygons.map(poly => poly.map(([lat, lng]) => [lng, lat]))
             })
           }),
-          fetch("https://snow-api-wg16.onrender.com/api/route", {
+          fetch("http://localhost:8080/api/route", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ stops: [startLoc, endLoc] })
